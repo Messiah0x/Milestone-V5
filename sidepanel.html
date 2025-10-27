@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Milestone — Side Panel</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body class="panel density--compact">
+    <!-- Top bar -->
+    <header class="topbar" role="banner">
+      <div class="brand" aria-label="Milestone">
+        <img src="icons/logo.png" alt="Milestone logo" class="brand__logo" />
+        <div class="brand__text">
+          <div class="brand__kicker">MILESTONE</div>
+          <div class="brand__title">Quest Hub</div>
+        </div>
+      </div>
+
+      <!-- Right-side actions (stacked) -->
+      <div class="actions actions--stack">
+        <button class="btn btn--primary" id="open-crates" type="button">Open Token Crates</button>
+        <button class="btn btn--ghost btn--sm" id="upgrade-btn" type="button">Upgrade</button>
+      </div>
+    </header>
+
+    <main class="content" role="main">
+      <!-- Rank -->
+      <section class="card" aria-labelledby="rank-title">
+        <div class="card__title-row">
+          <div class="card__title" id="rank-title">Milestone Rank</div>
+        </div>
+
+        <!-- User profile on the right (positioned via CSS) -->
+        <div class="profile-badge">
+          <button class="avatar" id="profile-button" title="Your profile" type="button" aria-label="Profile">
+            <img id="profile-avatar" alt="Profile" />
+          </button>
+          <div class="profile-username" data-username-target></div>
+        </div>
+
+        <div class="rank-row" aria-label="Current rank">
+          <div class="rank-row__left">
+            <img src="icons/Platinum.png" alt="Platinum Rank Icon" class="rank-icon" />
+            <div>
+              <div class="rank-row__tier">Platinum V</div>
+              <div class="rank-row__xp">1,260 / 2,000 XP</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-meta" aria-label="Rank progress">
+          <div class="progress__pct">63%</div>
+          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="63">
+            <div class="progress__bar" style="width:63%"></div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Trending Now -->
+      <section class="card card--trending" aria-labelledby="trending-title">
+        <div class="trending__header">
+          <span class="trending__kicker" id="trending-title">Trending Now 🔥</span>
+        </div>
+
+        <!-- Full-width rolling campaigns -->
+        <div class="trending__marquee" id="trending-marquee" aria-live="polite">
+          <div class="trending__track" id="trending-track">
+            <ul class="trending__list" id="trending-list"></ul>
+            <ul class="trending__list" id="trending-clone" aria-hidden="true"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recommended (LIST + DETAIL inside a sticky card; only inside scrolls) -->
+      <section class="card" aria-labelledby="rec-title">
+        <div class="card__title-row">
+          <div class="card__title" id="rec-title">Recommended</div>
+          <button class="btn btn--link" id="view-all" type="button">View all</button>
+        </div>
+
+        <!-- LIST VIEW -->
+        <div id="rec-list-view">
+          <div id="rec-chips" class="chip-row"></div>
+          <div id="rec-cards" class="rec-cards"></div>
+        </div>
+
+        <!-- DETAIL VIEW (hidden by default) -->
+        <div id="rec-detail-view" class="hidden"></div>
+      </section>
+    </main>
+
+    <!-- Token Crates Modal -->
+    <div id="crates-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="crates-title">
+      <div class="modal__backdrop" id="crates-close"></div>
+
+      <div class="modal__card">
+        <div class="modal__header">
+          <div class="modal__title" id="crates-title">Token Crates</div>
+          <button class="btn btn--ghost btn--sm" id="crates-x" type="button">✕</button>
+        </div>
+
+        <div class="modal__body" id="crates-body">
+          <!-- View A: selection grid -->
+          <div id="crates-select-view">
+            <div class="crates-grid" id="crates-grid"></div>
+          </div>
+
+          <!-- View B: open crates for a company -->
+          <div id="crates-open-view" class="hidden">
+            <div class="detail__header">
+              <button class="btn btn--ghost btn--sm" id="crates-back" type="button">← Back</button>
+              <div class="detail__title" id="crates-company-title"></div>
+              <div class="detail__meta">Available: <span id="crates-company-count">0</span></div>
+            </div>
+
+            <div class="loot__row mt-6">
+              <div class="loot__crate" id="crates-crate" aria-label="Token crate"></div>
+              <div class="loot__info">
+                <div class="loot__count">Openable: <span id="crates-count-inline">0</span></div>
+                <button class="btn btn--primary" id="crates-open" type="button">Open</button>
+                <button class="btn btn--ghost btn--sm" id="crates-open-another" type="button">Open another</button>
+              </div>
+            </div>
+
+            <div class="loot__result hidden" id="crates-result">
+              <div class="loot__reward" id="crates-reward"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Customization Modal -->
+    <div id="profile-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+      <div class="modal__card">
+        <div class="modal__header">
+          <h2 id="profile-modal-title">Customize Profile</h2>
+          <button class="btn btn--ghost btn--sm" id="profile-close" type="button">✕</button>
+        </div>
+
+        <div class="modal__body">
+          <label for="username-input" class="label">Username</label>
+          <input id="username-input" type="text" placeholder="Enter a username" maxlength="24" />
+          <p id="username-hint" class="hint">Only letters, numbers, and underscores (3–24 characters).</p>
+        </div>
+
+        <div class="modal__footer">
+          <button class="btn btn--ghost" id="profile-cancel" type="button">Cancel</button>
+          <button class="btn btn--primary" id="profile-confirm" type="button">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upgrade Modal (replaces old bottom section) -->
+    <div id="upgrade-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title">
+      <div class="modal__card">
+        <div class="modal__header">
+          <h2 id="upgrade-modal-title">Choose Your Plan</h2>
+          <button class="btn btn--ghost btn--sm" id="upgrade-close" type="button">✕</button>
+        </div>
+
+        <div class="modal__body upgrade">
+          <div class="upgrade__options">
+            <div class="upgrade__card">
+              <h3>Basic</h3>
+              <ul>
+                <li>Access to quests</li>
+              </ul>
+              <button class="btn btn--primary" id="select-basic" type="button">Select Basic</button>
+            </div>
+
+            <div class="upgrade__card verified">
+              <h3>Verified</h3>
+              <ul>
+                <li>Everything in Basic</li>
+                <li><strong>+20% Token Rewards</strong></li>
+                <li><strong>+20% XP Boost</strong></li>
+              </ul>
+              <button class="btn btn--primary" id="select-verified" type="button">Select Verified</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal__footer">
+          <button class="btn btn--ghost" id="upgrade-cancel" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

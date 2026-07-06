@@ -8,6 +8,19 @@
   </head>
 
   <body class="panel density--compact">
+    <!-- Connect Wallet gate (shown until a wallet session is established) -->
+    <div id="connect-gate" class="connect-gate hidden">
+      <div class="connect-gate__card">
+        <img src="icons/logo.png" alt="Milestone logo" class="connect-gate__logo" />
+        <h1>Connect a wallet</h1>
+        <p class="muted">Milestone distributes real tokens — connect a wallet to start earning XP and opening crates.</p>
+        <button class="btn btn--primary" id="connect-evm" type="button">Connect MetaMask</button>
+        <button class="btn btn--ghost" id="connect-solana" type="button">Connect Phantom / Backpack</button>
+        <p id="connect-error" class="connect-gate__error hidden"></p>
+      </div>
+    </div>
+
+    <div id="app-shell" class="hidden">
     <!-- Top bar -->
     <header class="topbar" role="banner">
       <div class="brand" aria-label="Milestone">
@@ -90,6 +103,7 @@
         <div id="rec-detail-view" class="hidden"></div>
       </section>
     </main>
+    </div><!-- /#app-shell -->
 
     <!-- Token Crates Modal -->
     <div id="crates-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="crates-title">
@@ -144,6 +158,13 @@
           <label for="username-input" class="label">Username</label>
           <input id="username-input" type="text" placeholder="Enter a username" maxlength="24" />
           <p id="username-hint" class="hint">Only letters, numbers, and underscores (3–24 characters).</p>
+
+          <label class="label" style="margin-top:12px;">Linked accounts</label>
+          <p class="hint">Required for Discord/Telegram quests to auto-verify.</p>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn--ghost btn--sm" id="link-discord" type="button">Link Discord</button>
+            <button class="btn btn--ghost btn--sm" id="link-telegram" type="button">Link Telegram</button>
+          </div>
         </div>
 
         <div class="modal__footer">
@@ -189,6 +210,10 @@
       </div>
     </div>
 
+    <script src="src/config.js"></script>
+    <script src="src/api.js"></script>
+    <script src="src/wallet.js"></script>
+    <script src="src/auth.js"></script>
     <script src="sidepanel.js"></script>
   </body>
 </html>

@@ -1,0 +1,8 @@
+{
+  "name": "milestone-v5",
+  "private": true,
+  "description": "Milestone monorepo — Chrome extension (/extension) + API (/backend). Deployed via the root /api shim into the backend Express app.",
+  "scripts": {
+    "build": "npm --prefix backend run prisma:generate"
+  }
+}

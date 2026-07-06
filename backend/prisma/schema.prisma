@@ -1,0 +1,290 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===================== Enums =====================
+
+enum Chain {
+  EVM
+  SOLANA
+}
+
+enum Plan {
+  BASIC
+  VERIFIED
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  ENDED
+}
+
+enum QuestType {
+  FOLLOW_X
+  VISIT_LINK
+  JOIN_DISCORD
+  JOIN_TELEGRAM
+  DISCORD_MESSAGE_COUNT
+  TELEGRAM_MESSAGE_COUNT
+  DAILY_CHECKIN
+  CUSTOM
+}
+
+enum VerificationMode {
+  AUTO
+  MANUAL
+  SELF_REPORT
+}
+
+enum CompletionStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum CrateTier {
+  NORMAL
+  RARE
+  UNIQUE
+  MYTHIC
+}
+
+enum TokenLedgerReason {
+  CRATE_OPEN
+  ADMIN_ADJUST
+}
+
+enum AdminRole {
+  SUPERADMIN
+  BRAND_MANAGER
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+// ===================== Core identity =====================
+
+model User {
+  id        String   @id @default(cuid())
+  username  String?  @unique
+  xp        Int      @default(0)
+  plan      Plan     @default(BASIC)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallets         Wallet[]
+  discordLink     DiscordLink?
+  telegramLink    TelegramLink?
+  completions     QuestCompletion[]
+  crateBalances   CrateBalance[]
+  crateOpens      CrateOpenLedger[]
+  tokenLedger     TokenLedgerEntry[]
+  subscription    Subscription?
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chain     Chain
+  address   String
+  isPrimary Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([chain, address])
+  @@index([userId])
+}
+
+model AuthNonce {
+  id        String   @id @default(cuid())
+  address   String
+  chain     Chain
+  nonce     String   @unique
+  message   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([address, chain])
+}
+
+model DiscordLink {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discordUserId   String   @unique
+  discordUsername String?
+  accessToken     String
+  refreshToken    String
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+}
+
+model TelegramLink {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  telegramUserId   String   @unique
+  telegramUsername String?
+  createdAt        DateTime @default(now())
+}
+
+// ===================== Brands / campaigns / quests =====================
+
+model Brand {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  logoUrl        String?
+  description    String?
+  websiteUrl     String?
+  discordGuildId String?
+  telegramChatId String?
+  xHandle        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  campaigns     Campaign[]
+  crateBalances CrateBalance[]
+  crateOpens    CrateOpenLedger[]
+  admins        AdminUser[]
+}
+
+model Campaign {
+  id           String         @id @default(cuid())
+  brandId      String
+  brand        Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  name         String
+  status       CampaignStatus @default(DRAFT)
+  trendingRank Int?
+  startsAt     DateTime?
+  endsAt       DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  quests Quest[]
+
+  @@index([brandId])
+  @@index([status, trendingRank])
+}
+
+model Quest {
+  id               String            @id @default(cuid())
+  campaignId       String
+  campaign         Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  type             QuestType
+  title            String
+  description      String?
+  targetUrl        String?
+  xpReward         Int               @default(10)
+  sortOrder        Int               @default(0)
+  verificationMode VerificationMode  @default(AUTO)
+  config           Json              @default("{}")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  completions QuestCompletion[]
+
+  @@index([campaignId])
+}
+
+model QuestCompletion {
+  id         String            @id @default(cuid())
+  questId    String
+  quest      Quest             @relation(fields: [questId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status     CompletionStatus  @default(PENDING)
+  evidence   Json?
+  reviewedBy String?
+  reviewedAt DateTime?
+  verifiedAt DateTime?
+  createdAt  DateTime          @default(now())
+
+  @@unique([questId, userId])
+  @@index([userId])
+  @@index([status])
+}
+
+model TelegramMessageCount {
+  id       String @id @default(cuid())
+  chatId   String
+  userId   String // telegramUserId, not our internal User.id
+  count    Int    @default(0)
+
+  @@unique([chatId, userId])
+}
+
+// ===================== Crate economy =====================
+
+model CrateBalance {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  count   Int    @default(0)
+
+  @@unique([userId, brandId])
+}
+
+model CrateOpenLedger {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandId   String
+  brand     Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  tier      CrateTier
+  amount    Int
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model TokenLedgerEntry {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    TokenLedgerReason
+  refId     String?
+  createdAt DateTime          @default(now())
+
+  @@index([userId])
+}
+
+// ===================== Billing =====================
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String?            @unique
+  status               SubscriptionStatus @default(INCOMPLETE)
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+// ===================== Admin =====================
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(BRAND_MANAGER)
+  brandId      String?
+  brand        Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+}

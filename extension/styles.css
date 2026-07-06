@@ -503,3 +503,22 @@ body.panel {
   from { transform: translateX(0); }
   to   { transform: translateX(calc(-1 * var(--scroll-px, 600px))); }
 }
+
+/* ==========================================================================
+   Connect Wallet gate
+   ========================================================================== */
+.connect-gate {
+  position: fixed; inset: 0; z-index: 500;
+  display: grid; place-items: center;
+  background: radial-gradient(120% 120% at 50% 0%, rgba(124,58,237,.18), var(--bg-0));
+  padding: 24px;
+}
+.connect-gate__card {
+  width: 100%; max-width: 320px; text-align: center;
+  display: grid; gap: 12px; justify-items: center;
+}
+.connect-gate__logo { width: 56px; height: 56px; filter: drop-shadow(0 0 16px rgba(124,58,237,.6)); }
+.connect-gate__card h1 { font-size: 20px; margin: 4px 0 0; }
+.connect-gate__card .muted { color: var(--text-60); font-size: 13px; margin: 0 0 8px; }
+.connect-gate__card .btn { width: 100%; }
+.connect-gate__error { color: #f87171; font-size: 12px; }

@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head><%- include('partials/head', { title: campaign.name }) %></head>
+<body>
+  <header>
+    <a href="/admin">Milestone Admin</a>
+    <form class="inline" method="post" action="/admin/logout"><button class="ghost" type="submit">Log out</button></form>
+  </header>
+  <main>
+    <p><a class="link" href="/admin">← Back to dashboard</a></p>
+    <section>
+      <h2><%= campaign.brand.name %> — <%= campaign.name %></h2>
+      <table>
+        <thead><tr><th>Title</th><th>Type</th><th>Verification</th><th>XP</th><th>Target URL</th></tr></thead>
+        <tbody>
+          <% campaign.quests.forEach(q => { %>
+          <tr>
+            <td><%= q.title %></td>
+            <td><span class="badge"><%= q.type %></span></td>
+            <td><%= q.verificationMode %></td>
+            <td><%= q.xpReward %></td>
+            <td class="muted"><%= q.targetUrl || '—' %></td>
+          </tr>
+          <% }) %>
+          <% if (!campaign.quests.length) { %><tr><td colspan="5" class="muted">No quests yet.</td></tr><% } %>
+        </tbody>
+      </table>
+
+      <h2 style="margin-top:18px;">Add quest</h2>
+      <form class="stack" method="post" action="/admin/campaigns/<%= campaign.id %>/quests">
+        <input name="title" placeholder="Quest title" required />
+        <textarea name="description" placeholder="Description (optional)"></textarea>
+        <select name="type" required>
+          <option value="FOLLOW_X">Follow on X (manual review)</option>
+          <option value="VISIT_LINK">Visit link (auto)</option>
+          <option value="JOIN_DISCORD">Join Discord (auto — checks guild membership)</option>
+          <option value="JOIN_TELEGRAM">Join Telegram (auto — checks chat membership)</option>
+          <option value="TELEGRAM_MESSAGE_COUNT">Telegram message count (auto — via webhook)</option>
+          <option value="DISCORD_MESSAGE_COUNT">Discord message count (manual review — no live bot yet)</option>
+          <option value="DAILY_CHECKIN">Daily check-in (auto)</option>
+          <option value="CUSTOM">Custom (manual review)</option>
+        </select>
+        <input name="targetUrl" placeholder="Target URL (optional)" />
+        <input name="xpReward" placeholder="XP reward" type="number" value="10" required />
+        <input name="requiredCount" placeholder="Required message count (only for message-count quests)" type="number" />
+        <button type="submit">Add quest</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

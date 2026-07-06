@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head><%- include('partials/head', { title: 'Dashboard' }) %></head>
+<body>
+  <header>
+    <a href="/admin">Milestone Admin</a>
+    <form class="inline" method="post" action="/admin/logout"><button class="ghost" type="submit">Log out</button></form>
+  </header>
+  <main>
+    <% if (admin.role === 'SUPERADMIN') { %>
+    <section>
+      <h2>Brands</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Slug</th><th>Discord Guild</th><th>Telegram Chat</th></tr></thead>
+        <tbody>
+          <% brands.forEach(b => { %>
+          <tr><td><%= b.name %></td><td><%= b.slug %></td><td><%= b.discordGuildId || '—' %></td><td><%= b.telegramChatId || '—' %></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <h2 style="margin-top:18px;">Add brand</h2>
+      <form class="stack" method="post" action="/admin/brands">
+        <input name="name" placeholder="Brand name" required />
+        <input name="slug" placeholder="slug (e.g. phantom)" required />
+        <input name="logoUrl" placeholder="Logo URL (optional)" />
+        <input name="discordGuildId" placeholder="Discord Guild ID (optional)" />
+        <input name="telegramChatId" placeholder="Telegram Chat ID (optional)" />
+        <input name="xHandle" placeholder="X handle (optional)" />
+        <button type="submit">Create brand</button>
+      </form>
+    </section>
+    <% } %>
+
+    <section>
+      <h2>Campaigns</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Brand</th><th>Status</th><th>Rank</th><th>Quests</th><th></th></tr></thead>
+        <tbody>
+          <% campaigns.forEach(c => { %>
+          <tr>
+            <td><%= c.name %></td>
+            <td><%= c.brand.name %></td>
+            <td><span class="badge"><%= c.status %></span></td>
+            <td><%= c.trendingRank ?? '—' %></td>
+            <td><%= c._count.quests %></td>
+            <td><a class="link" href="/admin/campaigns/<%= c.id %>">Manage quests →</a></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <h2 style="margin-top:18px;">Add campaign</h2>
+      <form class="stack" method="post" action="/admin/campaigns">
+        <select name="brandId" required>
+          <% brands.forEach(b => { %><option value="<%= b.id %>"><%= b.name %></option><% }) %>
+        </select>
+        <input name="name" placeholder="Campaign name" required />
+        <select name="status">
+          <option value="DRAFT">Draft</option>
+          <option value="ACTIVE">Active</option>
+          <option value="ENDED">Ended</option>
+        </select>
+        <input name="trendingRank" placeholder="Trending rank (optional, lower = higher up)" type="number" />
+        <button type="submit">Create campaign</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Pending manual reviews (<%= pending.length %>)</h2>
+      <table>
+        <thead><tr><th>Quest</th><th>Brand</th><th>User</th><th>Requested</th><th></th></tr></thead>
+        <tbody>
+          <% pending.forEach(p => { %>
+          <tr>
+            <td><%= p.quest.title %></td>
+            <td><%= p.quest.campaign.brand.name %></td>
+            <td><%= p.user.username || p.userId.slice(0,8) %></td>
+            <td class="muted"><%= p.createdAt.toISOString().slice(0,16).replace('T',' ') %></td>
+            <td>
+              <form class="inline" method="post" action="/admin/completions/<%= p.id %>/approve">
+                <button type="submit">Approve</button>
+              </form>
+              <form class="inline" method="post" action="/admin/completions/<%= p.id %>/reject">
+                <button class="danger" type="submit">Reject</button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+          <% if (!pending.length) { %><tr><td colspan="5" class="muted">Nothing to review.</td></tr><% } %>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Grant crates</h2>
+      <p class="muted">Use this to seed a user's crate balance for a brand (e.g. after a manual campaign reward, or to backfill for testing).</p>
+      <form class="stack" method="post" action="/admin/crates/grant">
+        <input name="userId" placeholder="User ID" required />
+        <select name="brandId" required>
+          <% brands.forEach(b => { %><option value="<%= b.id %>"><%= b.name %></option><% }) %>
+        </select>
+        <input name="count" placeholder="Count to add" type="number" min="1" value="1" required />
+        <button type="submit">Grant</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

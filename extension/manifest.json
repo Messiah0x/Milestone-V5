@@ -22,7 +22,7 @@
     "128": "icons/128.png"
   },
 
-  "permissions": ["tabs", "sidePanel"],
+  "permissions": ["tabs", "sidePanel", "scripting", "activeTab", "storage"],
 
   "background": {
     "service_worker": "service_worker.js"
